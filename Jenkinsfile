@@ -16,7 +16,6 @@ pipeline {
                 }
             }
         }
-    }
 
     stage('Test Acceptance'){ // we launch the curl command to validate that the container responds to the request
         steps {
@@ -28,16 +27,14 @@ pipeline {
         }
     }
 
-    stages {
-        stage('Docker Push') {
-            steps {
-                script {
-                    // Authentification Docker
-                    sh "docker login -u ${DOCKER_HUB_USERNAME} -p ${DOCKER_HUB_PASSWORD}"
-                    
-                    // Construction et publication des images
-                    sh "docker-compose -f ${DOCKER_COMPOSE_FILE} push"
-                }
+    stage('Docker Push') {
+        steps {
+            script {
+                // Authentification Docker
+                sh "docker login -u ${DOCKER_HUB_USERNAME} -p ${DOCKER_HUB_PASSWORD}"
+                
+                // Construction et publication des images
+                sh "docker-compose -f ${DOCKER_COMPOSE_FILE} push"
             }
         }
     }
@@ -47,79 +44,7 @@ pipeline {
             {
             KUBECONFIG = credentials("config") // we retrieve  kubeconfig from secret file called config saved on jenkins
             }
-                steps {
-                    script {
-                    sh '''
-                    rm -Rf .kube
-                    mkdir .kube
-                    ls
-                    cat $KUBECONFIG > .kube/config
-                    cp fastapi/values.yaml values.yml
-                    cat values.yml
-                    sed -i "s+tag.*+tag: ${DOCKER_TAG}+g" values.yml
-                    helm upgrade --install app fastapi --values=values.yml --namespace dev
-                    '''
-                    }
-                }
-
-            }
-
-    stage('Deploiement en QA'){
-            environment
-            {
-            KUBECONFIG = credentials("config") // we retrieve  kubeconfig from secret file called config saved on jenkins
-            }
-                steps {
-                    script {
-                    sh '''
-                    rm -Rf .kube
-                    mkdir .kube
-                    ls
-                    cat $KUBECONFIG > .kube/config
-                    cp fastapi/values.yaml values.yml
-                    cat values.yml
-                    sed -i "s+tag.*+tag: ${DOCKER_TAG}+g" values.yml
-                    helm upgrade --install app fastapi --values=values.yml --namespace QA
-                    '''
-                    }
-                }
-
-            }
-
-    stage('Deploiement en staging'){
-            environment
-            {
-            KUBECONFIG = credentials("config") // we retrieve  kubeconfig from secret file called config saved on jenkins
-            }
-                steps {
-                    script {
-                    sh '''
-                    rm -Rf .kube
-                    mkdir .kube
-                    ls
-                    cat $KUBECONFIG > .kube/config
-                    cp fastapi/values.yaml values.yml
-                    cat values.yml
-                    sed -i "s+tag.*+tag: ${DOCKER_TAG}+g" values.yml
-                    helm upgrade --install app fastapi --values=values.yml --namespace staging
-                    '''
-                    }
-                }
-
-            }
-
-    stage('Deploiement en prod'){
-        environment
-        {
-        KUBECONFIG = credentials("config") // we retrieve  kubeconfig from secret file called config saved on jenkins
-        }
             steps {
-            // Create an Approval Button with a timeout of 15minutes.
-            // this require a manuel validation in order to deploy on production environment
-                    timeout(time: 15, unit: "MINUTES") {
-                        input message: 'Do you want to deploy in production ?', ok: 'Yes'
-                    }
-
                 script {
                 sh '''
                 rm -Rf .kube
@@ -129,19 +54,92 @@ pipeline {
                 cp fastapi/values.yaml values.yml
                 cat values.yml
                 sed -i "s+tag.*+tag: ${DOCKER_TAG}+g" values.yml
-                helm upgrade --install app fastapi --values=values.yml --namespace prod
+                helm upgrade --install app fastapi --values=values.yml --namespace dev
                 '''
                 }
             }
 
-    }
-    
-    post {
-    always {
-        // Déconnexion Docker
-        script {
-            sh "docker logout"
+            }
+
+    stage('Deploiement en QA'){
+            environment
+            {
+            KUBECONFIG = credentials("config") // we retrieve  kubeconfig from secret file called config saved on jenkins
+            }
+            steps {
+                script {
+                sh '''
+                rm -Rf .kube
+                mkdir .kube
+                ls
+                cat $KUBECONFIG > .kube/config
+                cp fastapi/values.yaml values.yml
+                cat values.yml
+                sed -i "s+tag.*+tag: ${DOCKER_TAG}+g" values.yml
+                helm upgrade --install app fastapi --values=values.yml --namespace QA
+                '''
+                }
+            }
+
+            }
+
+        stage('Deploiement en staging'){
+            environment
+                {
+                KUBECONFIG = credentials("config") // we retrieve  kubeconfig from secret file called config saved on jenkins
+                }
+            steps {
+                script {
+                sh '''
+                rm -Rf .kube
+                mkdir .kube
+                ls
+                cat $KUBECONFIG > .kube/config
+                cp fastapi/values.yaml values.yml
+                cat values.yml
+                sed -i "s+tag.*+tag: ${DOCKER_TAG}+g" values.yml
+                helm upgrade --install app fastapi --values=values.yml --namespace staging
+                '''
+                }
+            }
+
         }
-    }
+
+        stage('Deploiement en prod'){
+            environment
+            {
+            KUBECONFIG = credentials("config") // we retrieve  kubeconfig from secret file called config saved on jenkins
+            }
+                steps {
+                // Create an Approval Button with a timeout of 15minutes.
+                // this require a manuel validation in order to deploy on production environment
+                        timeout(time: 15, unit: "MINUTES") {
+                            input message: 'Do you want to deploy in production ?', ok: 'Yes'
+                        }
+
+                    script {
+                    sh '''
+                    rm -Rf .kube
+                    mkdir .kube
+                    ls
+                    cat $KUBECONFIG > .kube/config
+                    cp fastapi/values.yaml values.yml
+                    cat values.yml
+                    sed -i "s+tag.*+tag: ${DOCKER_TAG}+g" values.yml
+                    helm upgrade --install app fastapi --values=values.yml --namespace prod
+                    '''
+                    }
+                }
+
+        }
+            
+        post {
+            always {
+                // Déconnexion Docker
+                script {
+                    sh "docker logout"
+                }
+            }
+        }
     }
 }
