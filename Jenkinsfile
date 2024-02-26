@@ -133,13 +133,5 @@ pipeline {
 
         }
             
-        post {
-            always {
-                // Déconnexion Docker
-                script {
-                    sh "docker logout"
-                }
-            }
-        }
     }
 }
