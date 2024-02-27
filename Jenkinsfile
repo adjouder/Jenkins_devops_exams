@@ -16,29 +16,29 @@ pipeline {
             }
         }
 
-    stage('Test Acceptance'){ // we launch the curl command to validate that the container responds to the request
-        steps {
-                script {
-                sh '''
-                curl localhost
-                '''
-                }
-        }
-    }
-
-    stage('Docker Push') {
-        steps {
-            script {
-                // Authentification Docker
-                sh "docker login -u ${DOCKER_HUB_USERNAME} -p ${DOCKER_HUB_PASS}"
-                
-                // Construction et publication des images
-                sh "docker-compose -f ${DOCKER_COMPOSE_FILE} push"
+        stage('Test Acceptance'){ // we launch the curl command to validate that the container responds to the request
+            steps {
+                    script {
+                    sh '''
+                    curl localhost
+                    '''
+                    }
             }
         }
-    }
 
-    stage('Deploiement en dev'){
+        stage('Docker Push') {
+            steps {
+                script {
+                    // Authentification Docker
+                    sh "docker login -u ${DOCKER_HUB_USERNAME} -p ${DOCKER_HUB_PASS}"
+                    
+                    // Construction et publication des images
+                    sh "docker-compose -f ${DOCKER_COMPOSE_FILE} push"
+                }
+            }
+        }
+
+        stage('Deploiement en dev'){
             environment
             {
             KUBECONFIG = credentials("config") // we retrieve  kubeconfig from secret file called config saved on jenkins
@@ -55,10 +55,6 @@ pipeline {
                 sed -i "s+tag.*+tag: ${DOCKER_TAG}+g" values.yml
                 helm upgrade --install app movieapp --values=values.yml --namespace dev
                 '''
-                }
-            }
-            steps {
-                script {
                 sh '''
                 rm -Rf .kube
                 mkdir .kube
@@ -69,47 +65,44 @@ pipeline {
                 sed -i "s+tag.*+tag: ${DOCKER_TAG}+g" values.yml
                 helm upgrade --install app castapp --values=values.yml --namespace dev
                 '''
+
+
                 }
             }
 
-            }
+        }
 
-    stage('Deploiement en QA'){
-            environment
-            {
-            KUBECONFIG = credentials("config") // we retrieve  kubeconfig from secret file called config saved on jenkins
-            }
-           steps {
-                script {
-                sh '''
-                rm -Rf .kube
-                mkdir .kube
-                ls
-                cat $KUBECONFIG > .kube/config
-                cp movie-service/movieapp/values.yaml values.yml
-                cat values.yml
-                sed -i "s+tag.*+tag: ${DOCKER_TAG}+g" values.yml
-                helm upgrade --install app movieapp --values=values.yml --namespace qa
-                '''
+        stage('Deploiement en QA'){
+                environment
+                {
+                KUBECONFIG = credentials("config") // we retrieve  kubeconfig from secret file called config saved on jenkins
                 }
-            }
             steps {
-                script {
-                sh '''
-                rm -Rf .kube
-                mkdir .kube
-                ls
-                cat $KUBECONFIG > .kube/config
-                cp cast-service/castapp/values.yaml values.yml
-                cat values.yml
-                sed -i "s+tag.*+tag: ${DOCKER_TAG}+g" values.yml
-                helm upgrade --install app castapp --values=values.yml --namespace qa
-                '''
-                }
-            }
+                    script {
+                    sh '''
+                    rm -Rf .kube
+                    mkdir .kube
+                    ls
+                    cat $KUBECONFIG > .kube/config
+                    cp movie-service/movieapp/values.yaml values.yml
+                    cat values.yml
+                    sed -i "s+tag.*+tag: ${DOCKER_TAG}+g" values.yml
+                    helm upgrade --install app movieapp --values=values.yml --namespace qa
+                    '''
 
-
+                    sh '''
+                    rm -Rf .kube
+                    mkdir .kube
+                    ls
+                    cat $KUBECONFIG > .kube/config
+                    cp cast-service/castapp/values.yaml values.yml
+                    cat values.yml
+                    sed -i "s+tag.*+tag: ${DOCKER_TAG}+g" values.yml
+                    helm upgrade --install app castapp --values=values.yml --namespace qa
+                    '''
+                    }
             }
+        }
 
         stage('Deploiement en staging'){
             environment
@@ -128,10 +121,7 @@ pipeline {
                 sed -i "s+tag.*+tag: ${DOCKER_TAG}+g" values.yml
                 helm upgrade --install app movieapp --values=values.yml --namespace staging
                 '''
-                }
-            }
-            steps {
-                script {
+
                 sh '''
                 rm -Rf .kube
                 mkdir .kube
@@ -152,12 +142,12 @@ pipeline {
             {
             KUBECONFIG = credentials("config") // we retrieve  kubeconfig from secret file called config saved on jenkins
             }
-                steps {
+            steps {
                 // Create an Approval Button with a timeout of 15minutes.
                 // this require a manuel validation in order to deploy on production environment
-                        timeout(time: 15, unit: "MINUTES") {
-                            input message: 'Do you want to deploy in production ?', ok: 'Yes'
-                        }
+                timeout(time: 15, unit: "MINUTES") {
+                    input message: 'Do you want to deploy in production ?', ok: 'Yes'
+                }
 
                 script {
                     sh '''
@@ -181,8 +171,7 @@ pipeline {
                     helm upgrade --install app movieapp --values=values.yml --namespace prod
                     '''
                     }
-                }
-        }
-            
+            }
+        }   
     }
 }
