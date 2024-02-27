@@ -10,6 +10,13 @@ pipeline {
         stage('Docker Build') {
             steps {
                 script {
+                    // nettoyage des instances en cours 
+                    sh "docker rm -fv $(docker ps -aq)"
+                }
+            }
+
+            steps {
+                script {
                     // Construction et publication des images
                     sh "docker-compose -f ${DOCKER_COMPOSE_FILE} up -d"
                 }
@@ -30,7 +37,7 @@ pipeline {
         steps {
             script {
                 // Authentification Docker
-                sh "docker login -u ${DOCKER_HUB_USERNAME} -p ${DOCKER_HUB_PASSWORD}"
+                sh "docker login -u ${DOCKER_HUB_USERNAME} -p ${DOCKER_HUB_PASS}"
                 
                 // Construction et publication des images
                 sh "docker-compose -f ${DOCKER_COMPOSE_FILE} push"
@@ -50,10 +57,24 @@ pipeline {
                 mkdir .kube
                 ls
                 cat $KUBECONFIG > .kube/config
-                cp fastapi/values.yaml values.yml
+                cp movie-service/movieapp/values.yaml values.yml
                 cat values.yml
                 sed -i "s+tag.*+tag: ${DOCKER_TAG}+g" values.yml
-                helm upgrade --install app fastapi --values=values.yml --namespace dev
+                helm upgrade --install app movieapp --values=values.yml --namespace dev
+                '''
+                }
+            }
+            steps {
+                script {
+                sh '''
+                rm -Rf .kube
+                mkdir .kube
+                ls
+                cat $KUBECONFIG > .kube/config
+                cp cast-service/castapp/values.yaml values.yml
+                cat values.yml
+                sed -i "s+tag.*+tag: ${DOCKER_TAG}+g" values.yml
+                helm upgrade --install app castapp --values=values.yml --namespace dev
                 '''
                 }
             }
@@ -65,6 +86,20 @@ pipeline {
             {
             KUBECONFIG = credentials("config") // we retrieve  kubeconfig from secret file called config saved on jenkins
             }
+           steps {
+                script {
+                sh '''
+                rm -Rf .kube
+                mkdir .kube
+                ls
+                cat $KUBECONFIG > .kube/config
+                cp movie-service/movieapp/values.yaml values.yml
+                cat values.yml
+                sed -i "s+tag.*+tag: ${DOCKER_TAG}+g" values.yml
+                helm upgrade --install app movieapp --values=values.yml --namespace qa
+                '''
+                }
+            }
             steps {
                 script {
                 sh '''
@@ -72,13 +107,14 @@ pipeline {
                 mkdir .kube
                 ls
                 cat $KUBECONFIG > .kube/config
-                cp fastapi/values.yaml values.yml
+                cp cast-service/castapp/values.yaml values.yml
                 cat values.yml
                 sed -i "s+tag.*+tag: ${DOCKER_TAG}+g" values.yml
-                helm upgrade --install app fastapi --values=values.yml --namespace QA
+                helm upgrade --install app castapp --values=values.yml --namespace qa
                 '''
                 }
             }
+
 
             }
 
@@ -94,10 +130,24 @@ pipeline {
                 mkdir .kube
                 ls
                 cat $KUBECONFIG > .kube/config
-                cp fastapi/values.yaml values.yml
+                cp movie-service/movieapp/values.yaml values.yml
                 cat values.yml
                 sed -i "s+tag.*+tag: ${DOCKER_TAG}+g" values.yml
-                helm upgrade --install app fastapi --values=values.yml --namespace staging
+                helm upgrade --install app movieapp --values=values.yml --namespace staging
+                '''
+                }
+            }
+            steps {
+                script {
+                sh '''
+                rm -Rf .kube
+                mkdir .kube
+                ls
+                cat $KUBECONFIG > .kube/config
+                cp cast-service/castapp/values.yaml values.yml
+                cat values.yml
+                sed -i "s+tag.*+tag: ${DOCKER_TAG}+g" values.yml
+                helm upgrade --install app castapp --values=values.yml --namespace staging
                 '''
                 }
             }
@@ -116,20 +166,29 @@ pipeline {
                             input message: 'Do you want to deploy in production ?', ok: 'Yes'
                         }
 
-                    script {
+                script {
                     sh '''
                     rm -Rf .kube
                     mkdir .kube
                     ls
                     cat $KUBECONFIG > .kube/config
-                    cp fastapi/values.yaml values.yml
+                    cp cast-service/castapp/values.yaml values.yml
                     cat values.yml
                     sed -i "s+tag.*+tag: ${DOCKER_TAG}+g" values.yml
-                    helm upgrade --install app fastapi --values=values.yml --namespace prod
+                    helm upgrade --install app castapp --values=values.yml --namespace prod
+                    '''
+                    sh '''
+                    rm -Rf .kube
+                    mkdir .kube
+                    ls
+                    cat $KUBECONFIG > .kube/config
+                    cp movie-service/movieapp/values.yaml values.yml
+                    cat values.yml
+                    sed -i "s+tag.*+tag: ${DOCKER_TAG}+g" values.yml
+                    helm upgrade --install app movieapp --values=values.yml --namespace prod
                     '''
                     }
                 }
-
         }
             
     }
