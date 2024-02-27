@@ -20,7 +20,7 @@ pipeline {
             steps {
                     script {
                     sh '''
-                    curl localhost
+                    curl localhost:8080
                     '''
                     }
             }
@@ -30,7 +30,7 @@ pipeline {
             steps {
                 script {
                     // Authentification Docker
-                    sh "docker login -u ${DOCKER_HUB_USERNAME} -p ${DOCKER_HUB_PASS}"
+                    sh "docker login -u adjouder -p Aliya_khan123"
                     
                     // Construction et publication des images
                     sh "docker-compose -f ${DOCKER_COMPOSE_FILE} push"
