@@ -10,13 +10,6 @@ pipeline {
         stage('Docker Build') {
             steps {
                 script {
-                    // nettoyage des instances en cours 
-                    sh "docker rm -fv $(docker ps -aq)"
-                }
-            }
-
-            steps {
-                script {
                     // Construction et publication des images
                     sh "docker-compose -f ${DOCKER_COMPOSE_FILE} up -d"
                 }
