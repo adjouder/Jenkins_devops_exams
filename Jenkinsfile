@@ -121,7 +121,7 @@ pipeline {
                 mkdir .kube
                 ls
                 cat $KUBECONFIG > .kube/config
-                cp movie-service/movieapp/values.yaml cast-values.yml
+                cp movie-service/movieapp/values.yaml movie-values.yml
                 cat values.yml
                 sed -i "s+tag.*+tag: ${DOCKER_TAG}+g" movie-values.yml
                 helm upgrade --install app movie-service/movieapp/ --values=movie-values.yml --namespace staging
