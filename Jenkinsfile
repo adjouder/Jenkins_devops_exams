@@ -27,11 +27,16 @@ pipeline {
         }
 
         stage('Docker Push') {
+            environment
+            {
+                DOCKER_PASS = credentials("DOCKER_HUB_PASS") // we retrieve  docker password from secret text called docker_hub_pass saved on jenkins
+            }
             steps {
                 script {
                     // Authentification Docker
-                    sh "docker login -u adjouder -p Aliya_khan123"
-                    
+                    sh '''
+                     docker login -u $DOCKER_HUB_USERNAME -p $DOCKER_PASS
+                    '''
                     // Construction et publication des images
                     sh "docker push movieapp:latest"
                     sh "docker push castapp:latest"
