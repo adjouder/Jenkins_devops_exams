@@ -5,7 +5,7 @@
 replicaCount: 1
 
 image:
-  repository: adjouder/cast-app
+  repository: adjouder/castapp
   pullPolicy: IfNotPresent
   # Overrides the image tag whose default is the chart appVersion.
   tag: ""
