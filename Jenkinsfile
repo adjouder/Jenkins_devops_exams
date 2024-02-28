@@ -33,8 +33,8 @@ pipeline {
                     sh "docker login -u adjouder -p Aliya_khan123"
                     
                     // Construction et publication des images
-                    sh "docker push movieapp:$DOCKER_TAG"
-                    sh "docker push castapp:$DOCKER_TAG"
+                    sh "docker push movieapp:latest"
+                    sh "docker push castapp:latest"
                 }
             }
         }
