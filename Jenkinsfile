@@ -36,10 +36,9 @@ pipeline {
                     // Authentification Docker
                     sh '''
                      docker login -u $DOCKER_HUB_USERNAME -p $DOCKER_PASS
+                     docker push movieapp:latest
+                     docker push castapp:latest"
                     '''
-                    // Construction et publication des images
-                    sh "docker push movieapp:latest"
-                    sh "docker push castapp:latest"
                 }
             }
         }
