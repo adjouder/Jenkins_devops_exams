@@ -103,7 +103,7 @@ pipeline {
                     cp cast-service/castapp/values.yaml values.yml
                     cat values.yml
                     sed -i "s+tag.*+tag: ${DOCKER_TAG}+g" values.yml
-                    helm upgrade --install app cast-service/castapp/v --values=values.yml --namespace qa
+                    helm upgrade --install app cast-service/castapp/ --values=values.yml --namespace qa
                     '''
                     }
             }
@@ -135,7 +135,7 @@ pipeline {
                 cp cast-service/castapp/values.yaml values.yml
                 #cat values.yml
                 sed -i "s+tag.*+tag: ${DOCKER_TAG}+g" values.yml
-                helm upgrade --install app cast-service/castapp/v --values=values.yml --namespace staging
+                helm upgrade --install app cast-service/castapp/ --values=values.yml --namespace staging
                 '''
                 }
             }
