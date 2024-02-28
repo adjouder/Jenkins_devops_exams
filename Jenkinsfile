@@ -56,8 +56,8 @@ pipeline {
                 ls
                 cat $KUBECONFIG > .kube/config
                 cp movie-service/movieapp/values.yaml values.yml
-                #sed -i "s+tag.*+tag: ${DOCKER_TAG}+g" values.yml
-                #cat values.yml
+                sed -i "s+tag.*+tag: ${DOCKER_TAG}+g" values.yml
+                cat values.yml
                 helm upgrade --install app movie-service/movieapp/  --values=values.yml --namespace dev
                 '''
 
@@ -92,7 +92,7 @@ pipeline {
                     cp movie-service/movieapp/values.yaml values.yml
                     cat values.yml
                     sed -i "s+tag.*+tag: ${DOCKER_TAG}+g" values.yml
-                    helm upgrade --install app movieapp --values=values.yml --namespace qa
+                    helm upgrade --install app movie-service/movieapp/ --values=values.yml --namespace qa
                     '''
 
                     sh '''
@@ -103,7 +103,7 @@ pipeline {
                     cp cast-service/castapp/values.yaml values.yml
                     cat values.yml
                     sed -i "s+tag.*+tag: ${DOCKER_TAG}+g" values.yml
-                    helm upgrade --install app castapp --values=values.yml --namespace qa
+                    helm upgrade --install app cast-service/castapp/v --values=values.yml --namespace qa
                     '''
                     }
             }
@@ -124,7 +124,7 @@ pipeline {
                 cp movie-service/movieapp/values.yaml values.yml
                 cat values.yml
                 sed -i "s+tag.*+tag: ${DOCKER_TAG}+g" values.yml
-                helm upgrade --install app movieapp --values=values.yml --namespace staging
+                helm upgrade --install app movie-service/movieapp/ --values=values.yml --namespace staging
                 '''
 
                 sh '''
@@ -135,7 +135,7 @@ pipeline {
                 cp cast-service/castapp/values.yaml values.yml
                 #cat values.yml
                 sed -i "s+tag.*+tag: ${DOCKER_TAG}+g" values.yml
-                helm upgrade --install app castapp --values=values.yml --namespace staging
+                helm upgrade --install app cast-service/castapp/v --values=values.yml --namespace staging
                 '''
                 }
             }
@@ -163,7 +163,7 @@ pipeline {
                     cp cast-service/castapp/values.yaml values.yml
                     cat values.yml
                     sed -i "s+tag.*+tag: ${DOCKER_TAG}+g" values.yml
-                    helm upgrade --install app castapp --values=values.yml --namespace prod
+                    helm upgrade --install app cast-service/castapp/ --values=values.yml --namespace prod
                     '''
                     sh '''
                     rm -Rf .kube
@@ -173,7 +173,7 @@ pipeline {
                     cp movie-service/movieapp/values.yaml values.yml
                     cat values.yml
                     sed -i "s+tag.*+tag: ${DOCKER_TAG}+g" values.yml
-                    helm upgrade --install app movieapp --values=values.yml --namespace prod
+                    helm upgrade --install app movie-service/movieapp/ --values=values.yml --namespace prod
                     '''
                     }
             }
